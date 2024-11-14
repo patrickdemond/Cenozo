@@ -1752,7 +1752,7 @@ cenozoApp.defineModule({
                 path: "source",
                 data: {
                   select: { column: "name" },
-                  modifier: { order: "name" },
+                  modifier: { order: "name", limit: 1000 },
                 },
               }).query();
               object.sourceList = response.data.map(row => row.name);
@@ -1762,7 +1762,7 @@ cenozoApp.defineModule({
                 path: "cohort",
                 data: {
                   select: { column: "name" },
-                  modifier: { order: "name" },
+                  modifier: { order: "name", limit: 1000 },
                 },
               }).query();
               object.cohortList = response.data.map(row => row.name);
@@ -1773,7 +1773,7 @@ cenozoApp.defineModule({
                   path: "relation_type",
                   data: {
                     select: { column: "name" },
-                    modifier: { order: "name" },
+                    modifier: { order: "name", limit: 1000 },
                   },
                 }).query();
                 object.relationTypeList = response.data.map(row => row.name);
@@ -1787,6 +1787,7 @@ cenozoApp.defineModule({
                   modifier: {
                     where: { column: "active", operator: "=", value: true },
                     order: "code",
+                    limit: 1000,
                   },
                 },
               }).query();
@@ -1797,7 +1798,7 @@ cenozoApp.defineModule({
                 path: "availability_type",
                 data: {
                   select: { column: "name" },
-                  modifier: { order: "name" },
+                  modifier: { order: "name", limit: 1000 },
                 },
               }).query();
               object.availabilityTypeList = response.data.map(row => row.name);
@@ -2095,6 +2096,7 @@ cenozoApp.defineModule({
                     // do not allow changing a participant to the index
                     where: { column: "name", operator: "!=", value: "Index" },
                     order: "rank",
+                    limit: 1000,
                   },
                 },
               }).query();
@@ -2135,6 +2137,8 @@ cenozoApp.defineModule({
                     { column: "collection.active", operator: "=", value: true },
                     { column: "collection.locked", operator: "=", value: false },
                   ],
+                  order: "collection.name",
+                  limit: 1000,
                 },
               },
             }).query();
@@ -2172,7 +2176,10 @@ cenozoApp.defineModule({
             // populate the study input list right away
             var response = await CnHttpFactory.instance({
               path: "study",
-              data: { select: { column: ["id", "name"] } },
+              data: {
+                select: { column: ["id", "name"] },
+                modifier: { order: "study.name", limit: 1000 },
+              },
             }).query();
 
             object.studyList = response.data;
