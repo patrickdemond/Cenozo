@@ -96,13 +96,13 @@ class equipment_type extends record
         else if( 'uid' == $column ) $row_data['uid'] = $row[$cindex];
         else if( 'active' == $column )
         {
-          $row_data['active'] = $row_data['active'] = $row[$cindex];
+          $row_data['active'] = $row[$cindex];
           if( is_string( $row_data['active'] ) )
             $row_data['active'] = preg_match( '/^1|y|yes|true$/', $row_data['active'] );
         }
         else if( 'lost' == $column )
         {
-          $row_data['lost'] = $row_data['lost'] = $row[$cindex];
+          $row_data['lost'] = $row[$cindex];
           if( is_string( $row_data['lost'] ) )
             $row_data['lost'] = preg_match( '/^1|y|yes|true$/', $row_data['lost'] );
         }
