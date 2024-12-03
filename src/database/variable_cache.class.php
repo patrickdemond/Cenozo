@@ -14,6 +14,23 @@ use cenozo\lib, cenozo\log;
 class variable_cache extends record
 {
   /**
+   * Removes all cached varaibles belonging to a participant
+   * 
+   * @param database\participant $db_participant
+   * @static
+   * @access public
+   */
+  public static function remove_by_participant( $db_participant )
+  {
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'participant_id', '=', $db_participant->id );
+    return static::db()->execute( sprintf(
+      'DELETE FROM variable_cache %s',
+      $modifier->get_sql()
+    ) );
+  }
+
+  /**
    * Removes expired variable values
    * 
    * @static
