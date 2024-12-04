@@ -68,6 +68,9 @@ $settings['general']['uid_regex'] = '^[A-Z][0-9]{6}$';
 // the administrator's email (if left NULL this will not be used)
 $settings['general']['admin_email'] = NULL;
 
+// the number of days after which values in the variable_cache table are deleted
+$settings['general']['variable_cache_expiry'] = 1;
+
 // list of all optional modules (off by default)
 $settings['module']['equipment'] = false;
 $settings['module']['interview'] = false;

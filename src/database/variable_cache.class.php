@@ -53,13 +53,18 @@ class variable_cache extends record
    */
   public static function overwrite_values( $db_participant, $values )
   {
+    $expiry_days = lib::create( 'business\setting_manager' )->get_setting( 'general', 'variable_cache_expiry' );
     $array = array();
     foreach( $values as $variable => $value )
+    {
       $array[] = sprintf(
-        '( %s, %s, %s, UTC_TIMESTAMP() + INTERVAL 1 DAY )',
+        '( %s, %s, %s, UTC_TIMESTAMP() + INTERVAL %d DAY )',
         static::db()->format_string( $db_participant->id ),
         static::db()->format_string( $variable ),
-        static::db()->format_string( $value ) );
+        static::db()->format_string( $value ),
+        $expiry_days
+      );
+    }
 
     $sql = 'REPLACE INTO variable_cache( participant_id, variable, value, expiry ) '.
            'VALUES '.implode( ',', $array );
