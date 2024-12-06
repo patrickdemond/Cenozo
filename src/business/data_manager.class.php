@@ -156,11 +156,19 @@ class data_manager extends \cenozo\singleton
   public function get_participant_value( $db_participant, $key, &$warning = NULL )
   {
     $util_class_name = lib::get_class_name( 'util' );
+    $alternate_type_class_name = lib::get_class_name( 'database\alternate_type' );
 
     // make sure the db_participant object is valid
     if( is_null( $db_participant ) ||
         false === strpos( get_class( $db_participant ), 'database\participant' ) )
       throw lib::create( 'exception\argument', 'db_participant', $db_participant, __METHOD__ );
+
+    // get a list of all alternate types so they can be referred to below
+    $alternate_type_list = [];
+    $alternate_type_sel = lib::create( 'database\select' );
+    $alternate_type_sel->add_column( 'name' );
+    foreach( $alternate_type_class_name::select( $alternate_type_sel ) as $alternate_type )
+      $alternate_type_list[] = $alternate_type['name'];
 
     // parse the key
     $parts = $this->parse_key( $key, true );
@@ -184,8 +192,7 @@ class data_manager extends \cenozo\singleton
         if( !is_null( $db_participant_identifier ) ) $value = $db_participant_identifier->value;
       }
     }
-    else if( 'alternate' == $subject || 'informant' == $subject || 'decedent' == $subject ||
-             'emergency' == $subject || 'proxy' == $subject )
+    else if( in_array( $subject, $alternate_type_list ) )
     {
       $alternate_mod = lib::create( 'database\modifier' );
       $alternate_mod->where( 'alternate.active', '=', true );
