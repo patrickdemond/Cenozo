@@ -1,7 +1,7 @@
 {
   "name": "cenozo",
   "description": "An Angular+PHP framework used to build logistics web applications for scientific studies.",
-  "version": "2.9",
+  "version": "2.10",
   "author": {
     "name": "Patrick D. Emond",
     "email": "emondpd@mcmaster.ca"
@@ -13,23 +13,22 @@
     "url": "https://github.com/clsa/cenozo"
   },
   "dependencies": {
-    "@uirouter/core": "latest",
-    "@uirouter/angularjs": "latest",
-    "angular": "^1.6.10",
-    "angular-animate": "latest",
-    "angular-bootstrap-colorpicker": "latest",
+    "@uirouter/angularjs": "1.0.22",
+    "@uirouter/core": "5.0.23",
+    "angular": "1.7.8",
+    "angular-animate": "1.7.8",
+    "angular-bootstrap-colorpicker": "3.0.32",
+    "angular-sanitize": "1.7.8",
+    "angular-ui-bootstrap": "2.5.6",
+    "bootstrap": "3.4.1",
     "chart.js": "4.4.4",
-    "angular-sanitize": "latest",
-    "angular-ui-bootstrap": "latest",
-    "bootstrap": "3.x",
-    "diff": "^5.0.0",
-    "file-saver": "latest",
-    "fullcalendar": "latest",
-    "jquery": "latest",
-    "moment": "latest",
-    "moment-timezone": "latest",
-    "requirejs": "latest",
-    "web-audio-recorder-js": "latest",
-    "jsonpath": "latest"
+    "diff": "5.0.0",
+    "file-saver": "2.0.2",
+    "fullcalendar": "3.10.1",
+    "jquery": "3.4.1",
+    "jsonpath": "1.1.1",
+    "moment": "2.24.0",
+    "moment-timezone": "0.5.26",
+    "requirejs": "2.3.6"
   }
 }
