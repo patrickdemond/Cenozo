@@ -122,6 +122,7 @@ final class bootstrap
 
         // make sure the software and database versions match
         if( $this->settings['general']['version'] != $this->session->get_application()->version )
+        {
           throw lib::create( 'exception\runtime',
             sprintf(
               'The software version (%s) does not match the database version (%s).  The web application will '.
@@ -129,6 +130,7 @@ final class bootstrap
               $this->settings['general']['version'],
               $this->session->get_application()->version ),
             __METHOD__ );
+        }
       }
     }
     catch( exception\base_exception $e )
@@ -166,17 +168,16 @@ final class bootstrap
         'code' => $util_class_name::convert_number_to_code( SYSTEM_CENOZO_BASE_ERRNO )
       );
 
-      if( class_exists( 'cenozo\log' ) )
-      {
-        log::error( sprintf(
-          "When loading mainUI:\nLast minute %s",
-          $e
-        ) );
-      }
+      if( class_exists( 'cenozo\log' ) ) log::error( sprintf( "When loading mainUI:\nLast minute %s", $e ) );
     }
 
     ob_end_clean();
-    print $ui->get_interface( $this->settings['general']['maintenance_mode'], $error );
+
+    $interface = '';
+    if( $this->settings['general']['maintenance_mode'] ) $interface = $ui->get_maintenance_interface();
+    else if( !is_null( $error ) ) $interface = $ui->get_error_interface( $error );
+    else $interface = $ui->get_interface();
+    print $interface;
   }
 
   /**

@@ -1,35 +1,9 @@
-<?php $min=DEVELOPMENT?'':'.min'; ?><!doctype html>
+<!doctype html>
 <html ng-app="cenozoApp" ng-controller="LangCtrl" lang="{{ lang }}">
 <head ng-controller="HeadCtrl">
   <meta charset="utf-8">
   <title><?php echo APP_TITLE; ?>{{ getPageTitle() }}</title>
-  <link rel="shortcut icon" href="<?php print ROOT_URL; ?>/img/favicon.ico">
-  <link rel="stylesheet" href="<?php print LIB_URL; ?>/bootstrap/dist/css/bootstrap.min.css?build=<?php print CENOZO_BUILD; ?>">
-  <link rel="stylesheet" href="<?php print LIB_URL; ?>/fullcalendar/dist/fullcalendar.min.css?build=<?php print CENOZO_BUILD; ?>">
-  <link rel="stylesheet" href="<?php print LIB_URL; ?>/angular-bootstrap-colorpicker/css/colorpicker.min.css?build=<?php print CENOZO_BUILD; ?>">
-  <link rel="stylesheet" href="<?php print CSS_URL; ?>/cenozo<?php print $min; ?>.css?build=<?php print CENOZO_BUILD; ?>">
-  <link rel="stylesheet" href="<?php print ROOT_URL; ?>/css/theme.css?build=<?php print CENOZO_BUILD.$theme_build; ?>">
-
-  <script src="<?php print LIB_URL; ?>/jquery/dist/jquery.min.js?build=<?php print CENOZO_BUILD; ?>"></script>
-  <script src="<?php print LIB_URL; ?>/bootstrap/dist/js/bootstrap.min.js?build=<?php print CENOZO_BUILD; ?>"></script>
-  <script src="<?php print LIB_URL; ?>/moment/min/moment-with-locales.min.js?build=<?php print CENOZO_BUILD; ?>"></script>
-  <script src="<?php print LIB_URL; ?>/moment-timezone/builds/moment-timezone-with-data-1970-2030.min.js?build=<?php print CENOZO_BUILD; ?>"></script>
-  <script src="<?php print LIB_URL; ?>/angular/angular.min.js?build=<?php print CENOZO_BUILD; ?>"></script>
-  <script src="<?php print LIB_URL; ?>/angular-ui-bootstrap/dist/ui-bootstrap-tpls.js?build=<?php print CENOZO_BUILD; ?>"></script>
-  <script src="<?php print LIB_URL; ?>/angular-animate/angular-animate.min.js?build=<?php print CENOZO_BUILD; ?>"></script>
-  <script src="<?php print LIB_URL; ?>/angular-sanitize/angular-sanitize.min.js?build=<?php print CENOZO_BUILD; ?>"></script>
-  <script src="<?php print LIB_URL; ?>/@uirouter/angularjs/release/angular-ui-router.min.js?build=<?php print CENOZO_BUILD; ?>"></script>
-  <script src="<?php print LIB_URL; ?>/fullcalendar/dist/fullcalendar.min.js?build=<?php print CENOZO_BUILD; ?>"></script>
-  <script src="<?php print LIB_URL; ?>/angular-bootstrap-colorpicker/js/bootstrap-colorpicker-module.min.js?build=<?php print CENOZO_BUILD; ?>"></script>
-<?php
-foreach( $optional_lib_list as $filename )
-{
-  printf( '  <script src="%s/%s?build=%s"></script>'."\n", LIB_URL, $filename, CENOZO_BUILD );
-}
-?>
-  <script src="<?php print CENOZO_URL; ?>/cenozo<?php print $min; ?>.js?build=<?php print CENOZO_BUILD; ?>" id="cenozo"></script>
-  <script src="<?php print ROOT_URL; ?>/app<?php print $min; ?>.js?build=<?php print APP_BUILD; ?>" id="app"></script>
-  <script src="<?php print LIB_URL; ?>/requirejs/require.js?build=<?php print CENOZO_BUILD; ?>"></script>
+<?php $this->print_libs(); ?>
   <base href="/"></base>
 </head>
 <body class="background">
@@ -51,8 +25,8 @@ foreach( $optional_lib_list as $filename )
     if( window.cenozo.development ) console.info( 'Development mode' );
 
     // define framework modules, set the applications module list then route them all
-    window.cenozo.defineFrameworkModules( <?php print $framework_module_string; ?> );
-    window.cenozoApp.setModuleList( <?php print $module_string; ?> );
+    window.cenozo.defineFrameworkModules( <?php $this->print_list( 'framework_modules' ); ?> );
+    window.cenozoApp.setModuleList( <?php $this->print_list( 'modules' ); ?> );
     window.cenozoApp.config( [
       '$stateProvider',
       function( $stateProvider ) {
@@ -80,9 +54,9 @@ foreach( $optional_lib_list as $filename )
       '$scope', '$state',
       function( $scope, $state ) {
         $scope.isCurrentState = function isCurrentState( state ) { return $state.is( state ); };
-        $scope.lists = <?php print $listitem_string; ?>;
-        $scope.utilities = <?php print $utility_item_string; ?>;
-        $scope.reports = <?php print $report_item_string; ?>;
+        $scope.lists = <?php $this->print_list( 'lists' ); ?>;
+        $scope.utilities = <?php $this->print_list( 'utilities' ); ?>;
+        $scope.reports = <?php $this->print_list( 'reports' ); ?>;
 
         $scope.splitLists = null != $scope.lists && $scope.lists && 20 <= Object.keys( $scope.lists ).length;
         $scope.halfListLength = null == $scope.lists ? 0 : Math.ceil( Object.keys( $scope.lists ).length / 2 );

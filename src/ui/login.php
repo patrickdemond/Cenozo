@@ -1,19 +1,9 @@
-<?php $min=DEVELOPMENT?'':'.min'; ?><!doctype html>
+<!doctype html>
 <html lang="en" ng-app="loginApp">
 <head>
   <meta charset="utf-8">
   <title><?php echo APP_TITLE; ?></title>
-  <link rel="shortcut icon" href="img/favicon.ico">
-  <link rel="stylesheet" href="<?php print LIB_URL; ?>/bootstrap/dist/css/bootstrap.min.css?_">
-  <link rel="stylesheet" href="<?php print CSS_URL; ?>/cenozo<?php print $min; ?>.css?build=<?php print CENOZO_BUILD; ?>">
-  <link rel="stylesheet" href="<?php print ROOT_URL; ?>/css/theme.css?build=<?php print CENOZO_BUILD.$theme_build; ?>">
-
-  <script src="<?php print LIB_URL; ?>/jquery/dist/jquery.min.js?_"></script>
-  <script src="<?php print LIB_URL; ?>/bootstrap/dist/js/bootstrap.min.js?_"></script>
-  <script src="<?php print LIB_URL; ?>/angular/angular.min.js?_"></script>
-  <script src="<?php print LIB_URL; ?>/angular-sanitize/angular-sanitize.min.js?_"></script>
-  <script src="<?php print LIB_URL; ?>/angular-ui-bootstrap/dist/ui-bootstrap-tpls.js?_"></script>
-
+<?php $this->print_libs(); ?>
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="-1">
 </head>
