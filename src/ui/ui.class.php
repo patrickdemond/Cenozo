@@ -18,116 +18,73 @@ class ui extends \cenozo\base_object
   /**
    * Returns the interface
    * 
-   * @param array $error An associative array containing the error "title", "message" and "code", or
-                         NULL if there is no error.
    * @return string
    * @access public
    */
-  public function get_interface( $maintenance = false, $error = NULL )
+  public function get_maintenance_interface()
+  {
+    $title = $this->maintenance_title;
+    $message = $this->maintenance_message;
+
+    ob_start();
+    if( !defined( 'APP_TITLE' ) ) define( 'APP_TITLE', ' ' );
+    include( CENOZO_PATH.'/src/ui/error.php' );
+    return ob_get_clean();
+  }
+
+  /**
+   * Returns the interface
+   * 
+   * @param string $title The error's title
+   * @param string $message
+   * @return string
+   * @access public
+   */
+  public function get_error_interface( $error )
+  {
+    $title = $error['title'];
+    $message = $error['message'];
+    $code = array_key_exists( 'code', $error ) && $error['code'] ? $error['code'] : NULL;
+
+    ob_start();
+    if( !defined( 'APP_TITLE' ) ) define( 'APP_TITLE', ' ' );
+    include( CENOZO_PATH.'/src/ui/error.php' );
+    return ob_get_clean();
+  }
+
+  /**
+   * Returns the interface
+   * 
+   * @return string
+   * @access public
+   */
+  public function get_interface()
   {
     $util_class_name = lib::get_class_name( 'util' );
     $session = lib::create( 'business\session' );
-    $db_application = $session->get_application();
-    $db_user = $session->get_user();
-    $theme_build = sprintf(
-      '%s%s',
-      str_replace( '#', '', $db_application->primary_color ),
-      str_replace( '#', '', $db_application->secondary_color )
-    );
 
-    $interface = '';
-    if( $maintenance || !is_null( $error ) )
-    {
-      $title = $maintenance ? 'The Application is Offline' : $error['title'];
-      $message = $maintenance
-               ? 'Sorry, the system is currently offline for maintenance. '.
-                 'Please check with an administrator or try again at a later time.'
-               : $error['message'];
+    // since there is no error we need to load the angular scripts
+    $this->add_base_libs();
 
-      // build the error interface
-      ob_start();
-      if( !defined( 'APP_TITLE' ) ) define( 'APP_TITLE', ' ' );
-      include( CENOZO_PATH.'/src/ui/error.php' );
-      $interface = ob_get_clean();
-    }
-    else if( is_null( $db_user ) )
+    if( is_null( $session->get_user() ) )
     { // no user means we haven't logged in, so show the login interface
       ob_start();
       $setting_manager = lib::create( 'business\setting_manager' );
       $chrome_minimum_version = $setting_manager->get_setting( 'general', 'chrome_minimum_version' );
       $firefox_minimum_version = $setting_manager->get_setting( 'general', 'firefox_minimum_version' );
       $admin_email = $setting_manager->get_setting( 'general', 'admin_email' );
-      $login_footer = $db_application->login_footer;
+      $login_footer = $session->get_application()->login_footer;
       include( CENOZO_PATH.'/src/ui/login.php' );
-      $interface = ob_get_clean();
-    }
-    else
-    {
-      // prepare the framework module list (used to identify which modules are provided by the framework)
-      $framework_module_list = $this->get_framework_module_list();
-      sort( $framework_module_list );
-
-      // prepare the module list (used to create all necessary states needed by the active role)
-      $this->build_module_list();
-      ksort( $this->module_list );
-
-      // prepare which modules to show in the list
-      $this->build_listitem_list();
-      if( 0 == count( $this->listitem_list ) ) $this->listitem_list = NULL;
-      else ksort( $this->listitem_list );
-
-      // prepare which utilities to show in the list
-      $utility_items = $this->get_utility_items();
-      if( 0 == count( $utility_items ) ) $utility_items = NULL;
-      else
-      {
-        ksort( $utility_items );
-
-        foreach( $utility_items as $title => $item )
-        {
-          $module = $this->assert_module( $item['subject'] );
-          $module->add_action( $item['action'], array_key_exists( 'query', $item ) ? $item['query'] : '' );
-        }
-      }
-
-      // prepare which reports to show in the list
-      $report_items = $this->get_report_items();
-      if( 0 == count( $report_items ) ) $report_items = NULL;
-      else ksort( $report_items );
-
-      // create the json strings for the interface
-      $module_array = [];
-      foreach( $this->module_list as $module ) $module_array[$module->get_subject()] = $module->as_array();
-      $framework_module_string = $util_class_name::json_encode( $framework_module_list );
-      $module_string = $util_class_name::json_encode( $module_array );
-      $listitem_string = $util_class_name::json_encode( $this->listitem_list );
-      $utility_item_string = $util_class_name::json_encode( $utility_items );
-      $report_item_string = $util_class_name::json_encode( $report_items );
-
-      // empty actions will show as array in json strings, convert to empty objects {}
-      $module_string = str_replace( '"actions":[]', '"actions":{}', $module_string );
-
-      // determine which optional libs are installed
-      $optional_lib_list = [];
-      $file_list = [
-        'chart.js/dist/chart.umd.js',
-        'file-saver/dist/FileSaver.min.js',
-        'diff/dist/diff.js',
-        'jsonpath/jsonpath.min.js',
-      ];
-      foreach( $file_list as $file )
-      {
-        $filename = sprintf( '%s/lib/%s', WEB_PATH, $file );
-        if( file_exists( $filename ) ) $optional_lib_list[] = $file;
-      }
-
-      // build the interface
-      ob_start();
-      include( CENOZO_PATH.'/src/ui/interface.php' );
-      $interface = ob_get_clean();
+      return ob_get_clean();
     }
 
-    return $interface;
+    // since we're not logging in we need to add all interface libs
+    $this->add_interface_libs();
+
+    // build the interface
+    ob_start();
+    include( CENOZO_PATH.'/src/ui/interface.php' );
+    return ob_get_clean();
   }
 
   /**
@@ -235,7 +192,7 @@ class ui extends \cenozo\base_object
           );
         }
       }
-      
+
       if( in_array( $module->get_subject(), [ 'recording', 'recording_file' ] ) )
       {
         if( !$use_recording_module )
@@ -247,7 +204,7 @@ class ui extends \cenozo\base_object
           );
         }
       }
-      
+
       // Check that modules are activated before using them
       if( in_array( $module->get_subject(), [ 'relation', 'relation_type' ] ) )
       {
@@ -573,8 +530,8 @@ class ui extends \cenozo\base_object
   protected function get_utility_items()
   {
     $setting_manager = lib::create( 'business\setting_manager' );
-    $db_role = lib::create( 'business\session' )->get_role();
-    $db_site = lib::create( 'business\session' )->get_site();
+    $session = lib::create( 'business\session' );
+    $db_role = $session->get_role();
 
     $list = [];
 
@@ -592,7 +549,7 @@ class ui extends \cenozo\base_object
         $list['Participant Import'] = [ 'subject' => 'participant', 'action' => 'import' ];
       }
     }
-    
+
     $list['Participant Search'] = array(
       'subject' => 'search_result',
       'action' => 'list',
@@ -601,16 +558,16 @@ class ui extends \cenozo\base_object
       'subject' => 'user',
       'action' => 'overview',
       'query' => '?{page}&{restrict}&{order}&{reverse}' );
-    
+
     if( array_key_exists( 'callback', $this->module_list ) )
     {
       $list['Callback Calendar'] = array(
         'subject' => 'callback',
         'action' => 'calendar',
         'query' => '/{identifier}',
-        'values' => sprintf( '{identifier:"name=%s"}', $db_site->name ) );
+        'values' => sprintf( '{identifier:"name=%s"}', $session->get_site()->name ) );
     }
-    
+
     if( 2 <= $db_role->tier || 'helpline' == $db_role->name )
     {
       $list['Tracing'] = array(
@@ -719,6 +676,309 @@ class ui extends \cenozo\base_object
   }
 
   /**
+   * Adds angular libs needed by the login and most main interfaces
+   */
+  protected function add_base_libs()
+  {
+    $this->script_list = array_merge( $this->script_list, [
+      [
+        'id' => NULL,
+        'path' => LIB_URL,
+        'file' => 'angular/angular.min.js',
+        'build' => CENOZO_BUILD,
+      ],
+      [
+        'id' => NULL,
+        'path' => LIB_URL,
+        'file' => 'angular-sanitize/angular-sanitize.min.js',
+        'build' => CENOZO_BUILD,
+      ],
+      [
+        'id' => NULL,
+        'path' => LIB_URL,
+        'file' => 'angular-ui-bootstrap/dist/ui-bootstrap-tpls.js',
+        'build' => CENOZO_BUILD,
+      ],
+    ] );
+
+    $db_application = lib::create( 'business\session' )->get_application();
+
+    // add the theme colours to the theme lib so they change immediately
+    $theme_build = sprintf(
+      '%s%s',
+      str_replace( '#', '', $db_application->primary_color ),
+      str_replace( '#', '', $db_application->secondary_color )
+    );
+
+    foreach( $this->link_list as $index => $link )
+    {
+      if( 'css/theme.css' == $link['file'] )
+      {
+        $this->link_list[$index]['build'] .= $theme_build;
+        break;
+      }
+    }
+  }
+
+  /**
+   * Adds angular libs needed by most main interfaces
+   */
+  protected function add_interface_libs()
+  {
+    // add additional links
+    $this->link_list = array_merge( $this->link_list, [
+      [
+        'rel' => 'stylesheet',
+        'path' => LIB_URL,
+        'file' => 'fullcalendar/dist/fullcalendar.min.css',
+        'build' => CENOZO_BUILD,
+      ],
+      [
+        'rel' => 'stylesheet',
+        'path' => LIB_URL,
+        'file' => 'angular-bootstrap-colorpicker/css/colorpicker.min.css',
+        'build' => CENOZO_BUILD,
+      ],
+    ] );
+
+    // add additional scripts
+    $this->script_list = array_merge( $this->script_list, [
+      [
+        'id' => NULL,
+        'path' => LIB_URL,
+        'file' => 'moment/min/moment-with-locales.min.js',
+        'build' => CENOZO_BUILD,
+      ],
+      [
+        'id' => NULL,
+        'path' => LIB_URL,
+        'file' => 'moment-timezone/builds/moment-timezone-with-data-1970-2030.min.js',
+        'build' => CENOZO_BUILD,
+      ],
+      [
+        'id' => NULL,
+        'path' => LIB_URL,
+        'file' => 'angular-animate/angular-animate.min.js',
+        'build' => CENOZO_BUILD,
+      ],
+      [
+        'id' => NULL,
+        'path' => LIB_URL,
+        'file' => '@uirouter/angularjs/release/angular-ui-router.min.js',
+        'build' => CENOZO_BUILD,
+      ],
+      [
+        'id' => NULL,
+        'path' => LIB_URL,
+        'file' => 'angular-bootstrap-colorpicker/js/bootstrap-colorpicker-module.min.js',
+        'build' => CENOZO_BUILD,
+      ],
+      [
+        'id' => NULL,
+        'path' => LIB_URL,
+        'file' => 'fullcalendar/dist/fullcalendar.min.js',
+        'build' => CENOZO_BUILD,
+      ],
+    ] );
+
+    // determine which optional libs are installed
+    $file_list = [
+      'chart.js/dist/chart.umd.js',
+      'file-saver/dist/FileSaver.min.js',
+      'diff/dist/diff.js',
+      'jsonpath/jsonpath.min.js',
+    ];
+    foreach( $file_list as $file )
+    {
+      $filename = sprintf( '%s/lib/%s', WEB_PATH, $file );
+      if( file_exists( $filename ) )
+      {
+        $this->script_list[] = [
+          'id' => NULL,
+          'path' => LIB_URL,
+          'file' => $file,
+          'build' => CENOZO_BUILD,
+        ];
+      }
+    }
+
+    // the following three scripts must always be loaded last
+    $this->script_list = array_merge( $this->script_list, [
+      [
+        'id' => 'cenozo',
+        'path' => CENOZO_URL,
+        'file' => DEVELOPMENT ? 'cenozo.js' : 'cenozo.min.js',
+        'build' => CENOZO_BUILD,
+      ],
+      [
+        'id' => 'app',
+        'path' => ROOT_URL,
+        'file' => DEVELOPMENT ? 'app.js' : 'app.min.js',
+        'build' => APP_BUILD,
+      ],
+      [
+        'id' => NULL,
+        'path' => LIB_URL,
+        'file' => 'requirejs/require.js',
+        'build' => CENOZO_BUILD,
+      ],
+    ] );
+  }
+
+  /**
+   * Prints JSON encoded lists for Javascript
+   * 
+   * @param string $type One of 'framework_modules', 'modules', 'lists', 'utilities', or 'reports'
+   */
+  protected function print_list( $type )
+  {
+    $util_class_name = lib::get_class_name( 'util' );
+
+    if( 'framework_modules' == $type )
+    {
+      // prepare the framework module list (used to identify which modules are provided by the framework)
+      $list = $this->get_framework_module_list();
+      sort( $list );
+
+      print $util_class_name::json_encode( $list );
+    }
+    else if( 'modules' == $type )
+    {
+      // prepare the module list (used to create all necessary states needed by the active role)
+      $this->build_module_list();
+      ksort( $this->module_list );
+
+      $list = [];
+      foreach( $this->module_list as $module ) $list[$module->get_subject()] = $module->as_array();
+      $json_string = $util_class_name::json_encode( $list );
+      // empty actions will show as array in json strings, convert to empty objects {}
+      $json_string = str_replace( '"actions":[]', '"actions":{}', $json_string );
+
+      print $json_string;
+    }
+    else if( 'lists' == $type )
+    {
+      // prepare which modules to show in the list
+      $this->build_listitem_list();
+      if( 0 == count( $this->listitem_list ) ) $this->listitem_list = NULL;
+      else ksort( $this->listitem_list );
+
+      print $util_class_name::json_encode( $this->listitem_list );
+    }
+    else if( 'utilities' == $type )
+    {
+      // prepare which utilities to show in the list
+      $utility_items = $this->get_utility_items();
+      if( 0 == count( $utility_items ) ) $utility_items = NULL;
+      else
+      {
+        ksort( $utility_items );
+
+        foreach( $utility_items as $title => $item )
+        {
+          $module = $this->assert_module( $item['subject'] );
+          $module->add_action( $item['action'], array_key_exists( 'query', $item ) ? $item['query'] : '' );
+        }
+      }
+
+      print $util_class_name::json_encode( $utility_items );
+    }
+    else if( 'reports' == $type )
+    {
+      // prepare which reports to show in the list
+      $report_items = $this->get_report_items();
+      if( 0 == count( $report_items ) ) $report_items = NULL;
+      else ksort( $report_items );
+
+      print $util_class_name::json_encode( $report_items );
+    }
+  }
+
+  /**
+   * Prints all <link> and <script> elements needed by the interface
+   */
+  protected function print_libs()
+  {
+    foreach( $this->link_list as $link )
+    {
+      printf(
+        '  <link %s%s></link>'."\n",
+        is_null( $link['rel'] ) ? '' : sprintf( 'rel="%s" ', $link['rel'] ),
+        sprintf(
+          'href="%s/%s%s"',
+          $link['path'],
+          $link['file'],
+          is_null( $link['build'] ) ? '' : '?build='.$link['build']
+        ),
+      );
+    }
+
+    foreach( $this->script_list as $script )
+    {
+      printf(
+        '  <script %s%s></script>'."\n",
+        sprintf(
+          'src="%s/%s%s"',
+          $script['path'],
+          $script['file'],
+          is_null( $script['build'] ) ? '' : '?build='.$script['build']
+        ),
+        is_null( $script['id'] ) ? '' : sprintf( ' id="%s"', $script['id'] )
+      );
+    }
+  }
+
+  /**
+   * A list links required by all interfaces
+   * @var array
+   */
+  protected $link_list = [
+    [
+      'rel' => 'shortcut icon',
+      'path' => ROOT_URL,
+      'file' => 'img/favicon.ico',
+      'build' => NULL,
+    ],
+    [
+      'rel' => 'stylesheet',
+      'path' => LIB_URL,
+      'file' => 'bootstrap/dist/css/bootstrap.min.css',
+      'build' => CENOZO_BUILD,
+    ],
+    [
+      'rel' => 'stylesheet',
+      'path' => CSS_URL,
+      'file' => DEVELOPMENT ? 'cenozo.css' : 'cenozo.min.css',
+      'build' => CENOZO_BUILD,
+    ],
+    [
+      'rel' => 'stylesheet',
+      'path' => ROOT_URL,
+      'file' => 'css/theme.css',
+      'build' => CENOZO_BUILD,
+    ],
+  ];
+
+  /**
+   * A list scripts required by all interfaces
+   * @var array
+   */
+  protected $script_list = [
+    [
+      'id' => NULL,
+      'path' => LIB_URL,
+      'file' => 'jquery/dist/jquery.min.js',
+      'build' => CENOZO_BUILD,
+    ],
+    [
+      'id' => NULL,
+      'path' => LIB_URL,
+      'file' => 'bootstrap/dist/js/bootstrap.min.js',
+      'build' => CENOZO_BUILD,
+    ],
+  ];
+
+  /**
    * The UI's module list
    * @var array
    */
@@ -729,4 +989,18 @@ class ui extends \cenozo\base_object
    * @var array
    */
   protected $listitem_list = [];
+
+  /**
+   * The maintenance title
+   * @var string
+   */
+  protected $maintenance_title = 'The Application is Offline';
+
+  /**
+   * The maintenance message
+   * @var string
+   */
+  protected $maintenance_message =
+    'Sorry, the system is currently offline for maintenance. '.
+    'Please check with an administrator or try again at a later time.';
 }
