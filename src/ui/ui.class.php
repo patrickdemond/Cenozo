@@ -81,11 +81,13 @@ class ui extends \cenozo\base_object
     // since we're not logging in we need to add all interface libs
     $this->add_interface_libs();
 
-    $this->print_list( 'framework_modules', false );
-    $this->print_list( 'modules', false );
-    $this->print_list( 'lists', false );
-    $this->print_list( 'utilities', false );
-    $this->print_list( 'reports', false );
+    // prepare which utilities to show in the list
+    $utility_items = $this->get_utility_items();
+    foreach( $utility_items as $title => $item )
+    {
+      $module = $this->assert_module( $item['subject'] );
+      $module->add_action( $item['action'], array_key_exists( 'query', $item ) ? $item['query'] : '' );
+    }
 
     // build the interface
     ob_start();
@@ -793,6 +795,7 @@ class ui extends \cenozo\base_object
       'file-saver/dist/FileSaver.min.js',
       'diff/dist/diff.js',
       'jsonpath/jsonpath.min.js',
+      'signature_pad/dist/signature_pad.umd.min.js',
     ];
     foreach( $file_list as $file )
     {
@@ -836,7 +839,7 @@ class ui extends \cenozo\base_object
    * 
    * @param string $type One of 'framework_modules', 'modules', 'lists', 'utilities', or 'reports'
    */
-  protected function print_list( $type, $print = true )
+  protected function print_list( $type )
   {
     $util_class_name = lib::get_class_name( 'util' );
 
@@ -846,7 +849,7 @@ class ui extends \cenozo\base_object
       $list = $this->get_framework_module_list();
       sort( $list );
 
-      if( $print ) print $util_class_name::json_encode( $list );
+      print $util_class_name::json_encode( $list );
     }
     else if( 'modules' == $type )
     {
@@ -860,7 +863,7 @@ class ui extends \cenozo\base_object
       // empty actions will show as array in json strings, convert to empty objects {}
       $json_string = str_replace( '"actions":[]', '"actions":{}', $json_string );
 
-      if( $print) print $json_string;
+      print $json_string;
     }
     else if( 'lists' == $type )
     {
@@ -869,25 +872,16 @@ class ui extends \cenozo\base_object
       if( 0 == count( $this->listitem_list ) ) $this->listitem_list = NULL;
       else ksort( $this->listitem_list );
 
-      if( $print ) print $util_class_name::json_encode( $this->listitem_list );
+      print $util_class_name::json_encode( $this->listitem_list );
     }
     else if( 'utilities' == $type )
     {
       // prepare which utilities to show in the list
       $utility_items = $this->get_utility_items();
       if( 0 == count( $utility_items ) ) $utility_items = NULL;
-      else
-      {
-        ksort( $utility_items );
+      else ksort( $utility_items );
 
-        foreach( $utility_items as $title => $item )
-        {
-          $module = $this->assert_module( $item['subject'] );
-          $module->add_action( $item['action'], array_key_exists( 'query', $item ) ? $item['query'] : '' );
-        }
-      }
-
-      if( $print ) print $util_class_name::json_encode( $utility_items );
+      print $util_class_name::json_encode( $utility_items );
     }
     else if( 'reports' == $type )
     {
@@ -896,7 +890,7 @@ class ui extends \cenozo\base_object
       if( 0 == count( $report_items ) ) $report_items = NULL;
       else ksort( $report_items );
 
-      if( $print ) print $util_class_name::json_encode( $report_items );
+      print $util_class_name::json_encode( $report_items );
     }
   }
 
