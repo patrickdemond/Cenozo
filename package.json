@@ -15,7 +15,7 @@
   "dependencies": {
     "@uirouter/angularjs": "1.0.22",
     "@uirouter/core": "5.0.23",
-    "angular": "1.7.8",
+    "angular": "1.8.3",
     "angular-animate": "1.7.8",
     "angular-bootstrap-colorpicker": "3.0.32",
     "angular-sanitize": "1.7.8",
@@ -27,8 +27,8 @@
     "fullcalendar": "3.10.1",
     "jquery": "3.4.1",
     "jsonpath": "1.1.1",
-    "moment": "2.24.0",
-    "moment-timezone": "0.5.26",
-    "requirejs": "2.3.6"
+    "moment": "2.30.1",
+    "moment-timezone": "0.5.35",
+    "requirejs": "2.3.7"
   }
 }
