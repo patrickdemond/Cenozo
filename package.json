@@ -27,7 +27,7 @@
     "fullcalendar": "3.10.1",
     "jquery": "3.4.1",
     "jsonpath": "1.1.1",
-    "moment": "2.24.0",
+    "moment": "2.30.1",
     "moment-timezone": "0.5.26",
     "requirejs": "2.3.6"
   }
