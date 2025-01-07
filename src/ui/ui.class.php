@@ -81,6 +81,12 @@ class ui extends \cenozo\base_object
     // since we're not logging in we need to add all interface libs
     $this->add_interface_libs();
 
+    $this->print_list( 'framework_modules', false );
+    $this->print_list( 'modules', false );
+    $this->print_list( 'lists', false );
+    $this->print_list( 'utilities', false );
+    $this->print_list( 'reports', false );
+
     // build the interface
     ob_start();
     include( CENOZO_PATH.'/src/ui/interface.php' );
@@ -830,7 +836,7 @@ class ui extends \cenozo\base_object
    * 
    * @param string $type One of 'framework_modules', 'modules', 'lists', 'utilities', or 'reports'
    */
-  protected function print_list( $type )
+  protected function print_list( $type, $print = true )
   {
     $util_class_name = lib::get_class_name( 'util' );
 
@@ -840,7 +846,7 @@ class ui extends \cenozo\base_object
       $list = $this->get_framework_module_list();
       sort( $list );
 
-      print $util_class_name::json_encode( $list );
+      if( $print ) print $util_class_name::json_encode( $list );
     }
     else if( 'modules' == $type )
     {
@@ -854,7 +860,7 @@ class ui extends \cenozo\base_object
       // empty actions will show as array in json strings, convert to empty objects {}
       $json_string = str_replace( '"actions":[]', '"actions":{}', $json_string );
 
-      print $json_string;
+      if( $print) print $json_string;
     }
     else if( 'lists' == $type )
     {
@@ -863,7 +869,7 @@ class ui extends \cenozo\base_object
       if( 0 == count( $this->listitem_list ) ) $this->listitem_list = NULL;
       else ksort( $this->listitem_list );
 
-      print $util_class_name::json_encode( $this->listitem_list );
+      if( $print ) print $util_class_name::json_encode( $this->listitem_list );
     }
     else if( 'utilities' == $type )
     {
@@ -881,7 +887,7 @@ class ui extends \cenozo\base_object
         }
       }
 
-      print $util_class_name::json_encode( $utility_items );
+      if( $print ) print $util_class_name::json_encode( $utility_items );
     }
     else if( 'reports' == $type )
     {
@@ -890,7 +896,7 @@ class ui extends \cenozo\base_object
       if( 0 == count( $report_items ) ) $report_items = NULL;
       else ksort( $report_items );
 
-      print $util_class_name::json_encode( $report_items );
+      if( $print ) print $util_class_name::json_encode( $report_items );
     }
   }
 
