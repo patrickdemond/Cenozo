@@ -135,7 +135,6 @@ class mail_manager extends \cenozo\base_object
     {
       $headers[] = 'MIME-Version: 1.0';
       $headers[] = 'Content-type: text/html; charset=iso-8859-1';
-      $headers[] = 'Content-Transfer-Encoding: quoted-printable';
     }
 
     // validate mandatory fields
