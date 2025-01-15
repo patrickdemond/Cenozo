@@ -310,6 +310,10 @@ class ui extends \cenozo\base_object
       {
         $module->add_child( 'participant' );
       }
+      else if( 'callback' == $module->get_subject() )
+      {
+        $module->add_action( 'calendar', '/{identifier}' );
+      }
       else if( 'collection' == $module->get_subject() )
       {
         $module->add_choose( 'participant' );
