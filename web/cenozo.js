@@ -8824,13 +8824,14 @@
 
             // convert format to mimeType
             if (null == this.mimeType) {
-              const formatList = [ "csv", "jpeg", "ods", "pdf", "txt", "unknown", "wav", "xlsx", "zip" ];
+              const formatList = [ "csv", "jpeg", "ods", "pdf", "png", "txt", "unknown", "wav", "xlsx", "zip" ];
               if (formatList.includes(this.format)) {
                 if ("csv" == this.format) this.mimeType = "text/csv;charset=utf-8";
                 else if ("jpeg" == this.format) this.mimeType = "image/jpeg";
                 else if ("ods" == this.format) this.mimeType =
                   "application/vnd.oasis.opendocument.spreadsheet;charset=utf-8";
                 else if ("pdf" == this.format) this.mimeType = "application/pdf";
+                else if ("png" == this.format) this.mimeType = "image/png";
                 else if ("txt" == this.format) this.mimeType = "text/plain";
                 else if ("unknown" == this.format) this.mimeType = "application/octet-stream";
                 else if ("wav" == this.format) this.mimeType = "audio/wav";
