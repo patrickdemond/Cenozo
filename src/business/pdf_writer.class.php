@@ -58,6 +58,156 @@ class pdf_writer extends \cenozo\base_object
   }
 
   /**
+   * Flattens the document making all fillable fields read-only
+   * @access public
+   */
+  public function flatten()
+  {
+    $this->pdf->flatten();
+  }
+
+  /**
+   * Stamps an image onto a PDF document, returning true if successful and false if not
+   * 
+   * @param string $pdf_filename The filename of the PDF file to stamp (must be flattened)
+   * @param string $pdf_dpi The PDF file's resolution in pixels per inch
+   * @param string $stamp_filename The filename of the PDF file to stamp (it will be trimmed)
+   * @param string $stamp_page Which page to stamp the image onto
+   * @param string $box_left_inches The distance of the left side of the box from the left side of the page
+   * @param string $box_bottom_inches The distance of the bottom of the box from the bottom of the page
+   * @param string $box_right_inches The distance of the right side of the box from the left side of the page
+   * @param string $box_top_inches The distance of the top of the box from the top of the page
+   * @return boolean 
+   */
+  public function stamp_image(
+    $pdf_filename,
+    $pdf_dpi,
+    $stamp_filename,
+    $stamp_page,
+    $box_left_inches,
+    $box_bottom_inches,
+    $box_right_inches,
+    $box_top_inches
+  ) {
+    // default padding
+    $sig_xpad = 1.15;
+    $sig_ypad = 1.30;
+
+    $box_width_inches = $box_right_inches - $box_left_inches;
+    $box_height_inches = $box_top_inches - $box_bottom_inches;
+
+    // put files into a unique directory name to avoid process collisions
+    $unique_identifier = bin2hex( openssl_random_pseudo_bytes( 4 ) );
+    $working_path = sprintf( '%s/%s', TEMP_PATH, $unique_identifier );
+    mkdir( $working_path );
+    $multistamp_filename = sprintf( '%s/stamp.pdf', $working_path );
+
+    // get the dimensions of all pages in the template
+    $pages = [];
+    $result = exec( sprintf( 'identify -format "%%wx%%h;" %s', $pdf_filename ) );
+    if( false === $result ) return false;
+    foreach( explode( ';', substr( $result, 0, -1 ) ) as $index => $extent )
+    {
+      $page = $index + 1;
+      [$page_width, $page_height] = explode( 'x', $extent );
+      $page_filename = sprintf( '%s/page%d.pdf', $working_path, $page );
+      $pages[] = $page_filename;
+
+      // convert measurements from inches to pixels
+      $box_left = round( $box_left_inches * $pdf_dpi );
+      $box_bottom = round( $page_height - $box_bottom_inches * $pdf_dpi );
+      $box_width = round( $box_width_inches * $pdf_dpi );
+      $box_height = round( $box_height_inches * $pdf_dpi );
+      $box_slope = $box_height / $box_width;
+
+      if( $page == $stamp_page )
+      {
+        $tsig_filename = sprintf( '%s/tsig.pdf', $working_path );
+
+        // trim the signature file and determine its dimensions
+        $result = exec( sprintf(
+          'convert %s -fuzz 10%% -trim +repage -transparent white %s',
+          $stamp_filename,
+          $tsig_filename
+        ) );
+        if( false === $result ) return false;
+        $result = exec( sprintf( 'identify -format "%%wx%%h" %s', $tsig_filename ) );
+        if( false === $result ) return false;
+        [$tsig_width, $tsig_height] = explode( 'x', $result );
+
+        // now pad the signature by 15%
+        $tsig_width = round( $sig_xpad * $tsig_width );
+        $tsig_height = round( $sig_ypad * $tsig_height );
+        $tsig_slope = $tsig_height / $tsig_width;
+        $result = exec( sprintf(
+          'convert %s -gravity Center -extent %dx%d %s',
+          $tsig_filename,
+          $tsig_width,
+          $tsig_height,
+          $tsig_filename
+        ) );
+        if( false === $result ) return false;
+
+        // determine whether to contrain the signature by width or height
+        $resize_width = $tsig_slope >= $box_slope ? $box_height / $tsig_slope : $box_width;
+        $resize_factor = $tsig_width / $resize_width;
+
+        // add the trimmed signature to the page
+        $result = exec( sprintf(
+          'convert %s '.
+            '-transparent white '.
+            '-background transparent '.
+            '-resize %d '.
+            '-gravity SouthEast '.
+            '-extent %dx%d %s',
+          $tsig_filename,
+          $tsig_width,
+          round( $resize_factor * $box_left + $tsig_width ),
+          round( $resize_factor * $box_bottom ),
+          $page_filename
+        ) );
+        if( false === $result ) return false;
+
+        // expand the page to the same size as the document (scaled up using the resize_factor)
+        $result = exec( sprintf(
+          'convert %s -background transparent -gravity NorthWest -extent %dx%d %s',
+          $page_filename,
+          round( $resize_factor * $page_width ),
+          round( $resize_factor * $page_height ),
+          $page_filename
+        ) );
+        if( false === $result ) return false;
+      }
+      else
+      {
+        // create a blank page
+        $result = exec( sprintf(
+          'convert -size %dx%d xc:transparent %s',
+          $page_width,
+          $page_height,
+          $page_filename
+        ) );
+        if( false === $result ) return false;
+      }
+    }
+
+    // now join the pages into a single mask file
+    $result = exec( sprintf( 'pdftk %s output %s', implode( ' ', $pages ), $multistamp_filename ) );
+    if( false === $result ) return false;
+
+    // and stamp the input file using a new instance of the pdftk class
+    $pdf = new pdftk\Pdf();
+    $pdf->addFile( $pdf_filename );
+    $pdf->multiStamp( $multistamp_filename );
+    $pdf->saveAs( $pdf_filename );
+
+    // clean up
+    exec( sprintf( 'rm -rf %s', $working_path ) );
+
+    return true;
+  }
+
+  /**
    * Saves the PDF to a file
    * 
    * @param string $filename The name of the file to save to
