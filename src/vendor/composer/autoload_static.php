@@ -40,6 +40,7 @@ class ComposerStaticInitf2124c698ecd30caf060e88ffade2a9a
         ),
         'C' => 
         array (
+            'Composer\\Pcre\\' => 14,
             'Complex\\' => 8,
         ),
     );
@@ -89,6 +90,10 @@ class ComposerStaticInitf2124c698ecd30caf060e88ffade2a9a
         'Matrix\\' => 
         array (
             0 => __DIR__ . '/..' . '/markbaker/matrix/classes/src',
+        ),
+        'Composer\\Pcre\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/composer/pcre/src',
         ),
         'Complex\\' => 
         array (
