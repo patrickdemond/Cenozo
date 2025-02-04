@@ -79,7 +79,7 @@ class pdf_writer extends \cenozo\base_object
    * @param string $box_top_inches The distance of the top of the box from the top of the page
    * @return boolean 
    */
-  public function stamp_image(
+  public function stamp_signature(
     $pdf_filename,
     $pdf_dpi,
     $stamp_filename,
@@ -122,7 +122,7 @@ class pdf_writer extends \cenozo\base_object
 
       if( $page == $stamp_page )
       {
-        $tsig_filename = sprintf( '%s/tsig.pdf', $working_path );
+        $tsig_filename = sprintf( '%s/tsig.png', $working_path );
 
         // trim the signature file and determine its dimensions
         $result = exec( sprintf(
@@ -164,14 +164,14 @@ class pdf_writer extends \cenozo\base_object
           $tsig_width,
           round( $resize_factor * $box_left + $tsig_width ),
           round( $resize_factor * $box_bottom ),
-          $page_filename
+          $tsig_filename
         ) );
         if( false === $result ) return false;
 
         // expand the page to the same size as the document (scaled up using the resize_factor)
         $result = exec( sprintf(
           'convert %s -background transparent -gravity NorthWest -extent %dx%d %s',
-          $page_filename,
+          $tsig_filename,
           round( $resize_factor * $page_width ),
           round( $resize_factor * $page_height ),
           $page_filename
